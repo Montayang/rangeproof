@@ -1,6 +1,6 @@
 # rangeproof
 
-It is the initial version of the protocol of polynomial rangeproof.
+It is the initial version(no zk) of the protocol of polynomial rangeproof.
 
 It is based on mcl. 
 
