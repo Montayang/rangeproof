@@ -11,7 +11,7 @@ class subgroup {
 public:
     __int128 order;
     Fr generator;
-    std::vector<Fr> elements;
+    //std::vector<Fr> elements;
 
 public:
     subgroup(__int128 size);
