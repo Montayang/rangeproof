@@ -153,30 +153,6 @@ kzg.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/kzg.cpp.s
 .PHONY : kzg.cpp.s
 
-main.o: main.cpp.o
-.PHONY : main.o
-
-# target to build an object file
-main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.o
-.PHONY : main.cpp.o
-
-main.i: main.cpp.i
-.PHONY : main.i
-
-# target to preprocess a source file
-main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.i
-.PHONY : main.cpp.i
-
-main.s: main.cpp.s
-.PHONY : main.s
-
-# target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.s
-.PHONY : main.cpp.s
-
 subgroups.o: subgroups.cpp.o
 .PHONY : subgroups.o
 
@@ -201,6 +177,30 @@ subgroups.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/subgroups.cpp.s
 .PHONY : subgroups.cpp.s
 
+zk_PIOP.o: zk_PIOP.cpp.o
+.PHONY : zk_PIOP.o
+
+# target to build an object file
+zk_PIOP.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/zk_PIOP.cpp.o
+.PHONY : zk_PIOP.cpp.o
+
+zk_PIOP.i: zk_PIOP.cpp.i
+.PHONY : zk_PIOP.i
+
+# target to preprocess a source file
+zk_PIOP.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/zk_PIOP.cpp.i
+.PHONY : zk_PIOP.cpp.i
+
+zk_PIOP.s: zk_PIOP.cpp.s
+.PHONY : zk_PIOP.s
+
+# target to generate assembly for a file
+zk_PIOP.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/zk_PIOP.cpp.s
+.PHONY : zk_PIOP.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -213,12 +213,12 @@ help:
 	@echo "... kzg.o"
 	@echo "... kzg.i"
 	@echo "... kzg.s"
-	@echo "... main.o"
-	@echo "... main.i"
-	@echo "... main.s"
 	@echo "... subgroups.o"
 	@echo "... subgroups.i"
 	@echo "... subgroups.s"
+	@echo "... zk_PIOP.o"
+	@echo "... zk_PIOP.i"
+	@echo "... zk_PIOP.s"
 .PHONY : help
 
 

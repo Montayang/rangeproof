@@ -60,13 +60,22 @@ std::pair<std::vector<std::vector<Fr>>, std::vector<std::vector<Fr>>> polynomial
         std::vector<Fr> tmp_dividend;
         for (__int128 i = 0; i < tmp_remainder.size(); ++i) {
             tmp_dividend.push_back(tmp_remainder[i][j]);
-            std::vector<Fr> tmp = polynomial_division(tmp_dividend, d1).first;
+            std::pair<std::vector<Fr>, std::vector<Fr>> tmp = polynomial_division(tmp_dividend, d1);
+            std::vector<Fr> tmpp = tmp.first;
+            std::vector<Fr> tmppp = tmp.second;
+            //for (auto i : tmppp) assert(i == 0);
             for (__int128 i = 0; i < tmp_remainder.size(); ++i) {
-                if (i < tmp.size()) quotient_x[i][j] = tmp[i];
+                if (i < tmpp.size()) quotient_x[i][j] = tmpp[i];
                 else quotient_x[i][j] = 0;
             }
         }
     }
+    // for (__int128 i = 0; i < 10; i++) {
+    //     Fr ff1, ff2;
+    //     ff1.setRand();
+    //     ff2.setRand();
+    //     assert(evaluate_polynomial_d2(f,ff1,ff2) == evaluate_polynomial_d2(quotient_x,ff1,ff2)*evaluate_polynomial(d1,ff1) +  evaluate_polynomial_d2(quotient_y,ff1,ff2)*evaluate_polynomial(d2,ff2));
+    // }
     return make_pair(quotient_x, quotient_y);
 }
 

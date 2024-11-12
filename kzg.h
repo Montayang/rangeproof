@@ -43,4 +43,5 @@ std::pair<Fr, std::pair<G1, G1>> kzg_createWitness_d2(const std::vector<std::vec
 bool kzg_verifyEval(const G1 &commitment, const CRS &crs, const Fr &i, const Fr &Phi_i, const G1 &witness);
 
 bool kzg_verifyEval_d2(const G1 &commitment, const CRS &crs, const Fr &i, const Fr &j, const Fr &Phi_ij, const std::pair<G1, G1> &witness);
+
 #endif
