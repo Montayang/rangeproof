@@ -9,8 +9,10 @@
 
 using namespace mcl::bls12;
 
-constexpr int MAX_N = 1 << 6;
-Fr tmp1[MAX_N], tmp2[MAX_N]; //for INTT
+constexpr int MAX_L = 1 << 16, MAX_B = 1 << 18, MAX_K = 1 << 5;
+Fr tmp1[MAX_B], tmp2[MAX_B]; //for NTT innerly
+Fr y_1[MAX_B], y_2[MAX_B]; // for poly_product and polynomial_extension
+Fr yy_1[MAX_L][MAX_K], yy_2[MAX_L][MAX_K]; // for poly_product_d2 and polynomial_extension_d2
 
 void print_int128(__int128 x) {
     if (x == 0) std::cout << "0";
@@ -83,7 +85,7 @@ void NTT(Fr* f, __int128 n, const subgroup& group, __int128 reverse) {
     for (__int128 i = 0; i < n; ++i) f[i] = tmp1[i];
 }
 
-void NTT_d2(Fr (&f)[MAX_N][MAX_N], __int128 n1, __int128 n2, const subgroup& group1, const subgroup& group2, __int128 reverse) {
+void NTT_d2(Fr (&f)[MAX_L][MAX_K], __int128 n1, __int128 n2, const subgroup& group1, const subgroup& group2, __int128 reverse) {
     for (__int128 i = 0; i < n1; ++i) NTT(f[i], n2, group2, reverse);
     for (__int128 j = 0; j < n2; ++j) {
         for (__int128 i = 0; i < n1; ++i) tmp2[i] = f[i][j];
@@ -99,7 +101,6 @@ std::vector<Fr> poly_product(const std::vector<Fr>& poly1, const std::vector<Fr>
     }
     subgroup group(n);
 
-    Fr y_1[MAX_N], y_2[MAX_N];
     for (__int128 i = 0; i < n; i++) {
         if (i < poly1.size()) y_1[i] = poly1[i];
         else y_1[i] = 0;
@@ -130,7 +131,6 @@ std::vector<std::vector<Fr>> poly_product_d2(const std::vector<std::vector<Fr>>&
     }
     subgroup group1(n1), group2(n2);
 
-    Fr yy_1[MAX_N][MAX_N], yy_2[MAX_N][MAX_N];
     for (__int128 i = 0; i < n1; i++) {
         for (__int128 j = 0; j < n2; j++) {
             if (i < poly1.size() && j < poly1[0].size()) yy_1[i][j] = poly1[i][j];
@@ -182,13 +182,14 @@ int main() {
     Fr R;
     __int128 b, k, l;
     R.setStr("18446744073709551615"); //2^64 - 1
-    b = 16, k = 16, l = 16;
+    b = 65536, k = 4, l = 16384;
     std::vector<Fr> a = generate_polynomial(l);
-    CRS crs = kzg_setup(g1, g2, 2 * l + 3, 2 * k + 3);
+    CRS crs = kzg_setup(g1, g2);
 
     //a[6].setStr("18446744073709551616"); //for testing over range
 
     std::vector<Fr> G = sumset_representation(R, b);
+
     subgroup H_l(l), H_k(k), H_b(b);
 
     // bit decomposition
@@ -215,55 +216,56 @@ int main() {
         }
     }
     
+    std::cout << "Preparing Completed." << std::endl;
+
     //Step 1:
-    Fr y[MAX_N], yy[MAX_N][MAX_N];
     for (__int128 i = 0; i < l; i++) {// d_extension
-        for (__int128 j = 0; j < k; j++) yy[i][j] = d[i][j];
+        for (__int128 j = 0; j < k; j++) yy_1[i][j] = d[i][j];
     }
-    NTT_d2(yy, l, k, H_l, H_k, -1);
+    NTT_d2(yy_1, l, k, H_l, H_k, -1);
     std::vector<std::vector<Fr>> d_poly;
     for (__int128 i = 0; i < l; i++) {
         std::vector<Fr> vec;
         d_poly.push_back(vec);
         for (__int128 j = 0; j < k; j++) {
-            d_poly[i].push_back(yy[i][j]/l/k);
+            d_poly[i].push_back(yy_1[i][j]/l/k);
         }
     }
 
     for (__int128 i = 0; i < l; i++) {// a_extension
-        y[i] = a[i];
+        y_1[i] = a[i];
     }
-    NTT(y, l, H_l, -1);
+    NTT(y_1, l, H_l, -1);
     std::vector<Fr> a_poly;
     for (__int128 i = 0; i < l; i++) {
-        a_poly.push_back(y[i]/l);
+        a_poly.push_back(y_1[i]/l);
     }
 
     for (__int128 i = 0; i < k; i++) {// c_extension
-        y[i] = G[i];
+        y_1[i] = G[i];
     }
-    NTT(y, k, H_k, -1);
+    NTT(y_1, k, H_k, -1);
     std::vector<Fr> c_poly;
     for (__int128 i = 0; i < k; i++) {
-        c_poly.push_back(y[i]/k);
+        c_poly.push_back(y_1[i]/k);
     }
 
     for (__int128 i = 0; i < b; i++) {// I_extension
-        y[i] = i;
+        y_1[i] = i;
     }
-    NTT(y, b, H_b, -1);
+    NTT(y_1, b, H_b, -1);
     std::vector<Fr> I_poly;
     for (__int128 i = 0; i < b; i++) {
-        I_poly.push_back(y[i] / b);
+        I_poly.push_back(y_1[i] / b);
     }
 
     for (__int128 i = 0; i < b; i++) {// m_extension
-        y[i] = m[i];
+        y_1[i] = m[i];
     }
-    NTT(y, b, H_b, -1);
+    NTT(y_1, b, H_b, -1);
     std::vector<Fr> m_poly;
     for (__int128 i = 0; i < b; i++) {
-        m_poly.push_back(y[i] / b);
+        m_poly.push_back(y_1[i] / b);
     }
 
     Fr s_0, s_1;//generate s_0, s_1
@@ -307,6 +309,8 @@ int main() {
     G1 m_prime_commitment = kzg_commit(m_poly_prime, crs);
     //assert(verify_kzg_open(m_commitment, m_poly, crs));
 
+    std::cout << "Step1 Completed." << std::endl;
+
     //Step2:
     Fr alpha, r_0;
     alpha.setRand();
@@ -322,25 +326,25 @@ int main() {
     std::vector<Fr> e;
     for (__int128 i = 0; i < b; i++) e.push_back(m[i] / (alpha + i));
     for (__int128 i = 0; i < l; i++) {// T_extension
-        for (__int128 j = 0; j < k; j++) yy[i][j] = T[i][j];
+        for (__int128 j = 0; j < k; j++) yy_1[i][j] = T[i][j];
     }
-    NTT_d2(yy, l, k, H_l, H_k, -1);
+    NTT_d2(yy_1, l, k, H_l, H_k, -1);
     std::vector<std::vector<Fr>> T_poly;
     for (__int128 i = 0; i < l; i++) {
         std::vector<Fr> vec;
         T_poly.push_back(vec);
         for (__int128 j = 0; j < k; j++) {
-            T_poly[i].push_back(yy[i][j]/l/k);
+            T_poly[i].push_back(yy_1[i][j]/l/k);
         }
     }
 
     for (__int128 i = 0; i < b; i++) {// e_extension
-        y[i] = e[i];
+        y_1[i] = e[i];
     }
-    NTT(y, b, H_b, -1);
+    NTT(y_1, b, H_b, -1);
     std::vector<Fr> e_poly;
     for (__int128 i = 0; i < b; i++) {
-        e_poly.push_back(y[i]/b);
+        e_poly.push_back(y_1[i]/b);
     }
 
     std::vector<std::vector<Fr>> T_poly_prime = T_poly;//construct T'
@@ -359,6 +363,8 @@ int main() {
     //assert(verify_kzg_open_d2(T_prime_commitment, T_poly, crs));
     G1 e_prime_commitment = kzg_commit(e_poly_prime, crs);
     //assert(verify_kzg_open(e_prime_commitment, e_poly_prime, crs));
+
+    std::cout << "Step2 Completed." << std::endl;
 
     //Step3:
     std::vector<Fr> F1;
@@ -381,12 +387,17 @@ int main() {
     F1[k] -= a_r0_poly[k] / k;
     std::vector<Fr> Z_H_k(k + 1, 0);
     Z_H_k[0] = -1, Z_H_k[k] = 1;
-    std::pair<std::vector<Fr>, std::vector<Fr>> tmp_pair = polynomial_division(F1, Z_H_k);
-    std::vector<Fr> h_1_poly = tmp_pair.first;
-    std::vector<Fr> g_1_poly = tmp_pair.second;
+    std::vector<Fr> h_1_poly(k, 0);
+    std::vector<Fr> g_1_poly(k, 0);
+    for (__int128 i = k; i < 2 * k; i++) {//construct h_1 and g_1
+        h_1_poly[i - k] = F1[i];
+        g_1_poly[i - k] = F1[i - k] + F1[i];
+    }
     assert(g_1_poly[0] == 0); //check remainder have no constant when divide F1
     for (__int128 i = 0; i < g_1_poly.size() - 1; i++) g_1_poly[i] = g_1_poly[i + 1];
     g_1_poly[g_1_poly.size() - 1] = 0;
+
+    std::cout << "F1 Completed." << std::endl;
 
     std::vector<std::vector<Fr>> F2 = d_poly_prime;
     F2[0][0] += alpha;
@@ -394,21 +405,51 @@ int main() {
     F2[0][0] -= 1;
     std::vector<Fr> Z_H_l(l + 1, 0);
     Z_H_l[0] = -1, Z_H_l[l] = 1;
-    std::pair<std::vector<std::vector<Fr>>, std::vector<std::vector<Fr>>> tmp_pair2 = polynomial_division_d2(F2, Z_H_l, Z_H_k);
-    std::vector<std::vector<Fr>> p_poly = tmp_pair2.first;
-    std::vector<std::vector<Fr>> q_poly = tmp_pair2.second;
+
+    std::cout << "F2 Constructing Completed." << std::endl;
+
+    std::vector<std::vector<Fr>> p_poly;
+    std::vector<std::vector<Fr>> q_poly;
+    for (__int128 i = 0; i < l + 1; i++) {
+        std::vector<Fr> tmp_zero(2 * k + 1, 0);
+        p_poly.push_back(tmp_zero);
+    }
+    for (__int128 i = 0; i < l; i++) {
+        std::vector<Fr> tmp_zero(k + 1, 0);
+        q_poly.push_back(tmp_zero);
+    }
+    for (__int128 j = 0; j < 2 * k + 1; j++) {
+        for (__int128 i = l + 1; i < 2 * l + 1; i++)
+            p_poly[i - l][j] = F2[i][j];
+        p_poly[0][j] = F2[l][j] + F2[2 * l][j];
+    }
+    
+    for (__int128 i = 0; i < l; i++) {
+        for (__int128 j = k + 1; j < 2 * k + 1; j++)
+            q_poly[i][j - k] = F2[i][j] + p_poly[i][j];
+        q_poly[i][0] = F2[i][k] + p_poly[i][k] + q_poly[i][k];
+    }
+
+
+    std::cout << "F2 Completed." << std::endl;
 
     std::vector<Fr> F3 = I_poly;
     F3[0] += alpha;
     F3 = poly_product(F3, e_poly_prime);
-    for (__int128 i = 0; i <= b; i++) {
-        F3[i] -= m_poly_prime[i];
-    }
+    // for (__int128 i = 0; i <= b; i++) {
+    //     F3[i] -= m_poly_prime[i];
+    // } //no need because we do not need the items that deg < b to construct h_2
+    F3[b] -= s_0;
+    
+    std::cout << "F3 Constructing Completed." << std::endl;
+    
     std::vector<Fr> Z_H_b(b + 1, 0);
     Z_H_b[0] = -1, Z_H_b[b] = 1;
-    std::pair<std::vector<Fr>, std::vector<Fr>> tmp_pair3 = polynomial_division(F3, Z_H_b);
-    for (auto i : tmp_pair3.second) assert(i == 0); //check no remainder when divide F3
-    std::vector<Fr> h_2_poly = tmp_pair3.first;
+    std::vector<Fr> h_2_poly(b, 0); //construct h_2
+    for (__int128 i = b; i < 2 * b; i++) {
+        h_2_poly[i - b] = F3[i];
+    }
+
     G1 h_1_commitment = kzg_commit(h_1_poly, crs);
     //assert(verify_kzg_open(h_1_commitment, h_1_poly, crs));
     G1 g_1_commitment = kzg_commit(g_1_poly, crs);
@@ -419,6 +460,8 @@ int main() {
     //assert(verify_kzg_open_d2(q_commitment, q_poly, crs));
     G1 h_2_commitment = kzg_commit(h_2_poly, crs);
     //assert(verify_kzg_open(h_2_commitment, h_2_poly, crs));
+
+    std::cout << "Step3 Preparing Completed." << std::endl;
 
     //Step3 check:
     std::pair<Fr, G1> e_oracle = kzg_createWitness(e_poly_prime, crs, r_0);
@@ -437,6 +480,8 @@ int main() {
     e_oracle = kzg_createWitness(e_poly_prime, crs, 0);
     assert(kzg_verifyEval(e_prime_commitment, crs, 0, e_oracle.first, e_oracle.second));
     assert(T_oracle.first * l * k == e_oracle.first * b);
+
+    std::cout << "Step3 Completed." << std::endl;
 
     //Step4: 
     Fr r_1;
@@ -463,6 +508,8 @@ int main() {
     assert(kzg_verifyEval_d2(q_commitment, crs, r_0, r_1, q_oracle.first, q_oracle.second));
     Fr Z_H_l_eval = evaluate_polynomial(Z_H_l, r_0);
     assert(T_oracle.first * (alpha + d_oracle.first) - 1 == p_oracle.first * Z_H_l_eval + q_oracle.first * Z_H_k_eval);
+
+    std::cout << "Step4 Completed." << std::endl;
 
     std::cout << "1" << std::endl;
 

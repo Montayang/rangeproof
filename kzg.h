@@ -22,19 +22,25 @@ struct CRS {
     Fr SK2; //for kzg_d2
     G1 g1;
     G2 g2;
-    std::pair<std::vector<G1>, G2> PK1; //first is i * g1, second is sk * g2
-    std::pair<std::vector<std::vector<G1>>, G2> PK2; //for kzg_d2
+    //for open
+    //std::pair<std::vector<G1>, G2> PK1; //first is i * g1, second is sk * g2
+    //std::pair<std::vector<std::vector<G1>>, G2> PK2; //for kzg_d2
+    G2 PK1;
+    G2 PK2;
 };
 
-CRS kzg_setup(const G1 &g1, const G2 &g2, const __int128 &t1, const __int128 &t2);
+//CRS kzg_setup(const G1 &g1, const G2 &g2, const __int128 &t1, const __int128 &t2);
+
+CRS kzg_setup(const G1 &g1, const G2 &g2);
+
 
 G1 kzg_commit(const std::vector<Fr> &coeffs, const CRS &crs);
 
 G1 kzg_commit_d2(const std::vector<std::vector<Fr>> &coeffs, const CRS &crs);
 
-bool verify_kzg_open(const G1 &commitment, const std::vector<Fr> &coeffs, const CRS &crs);
+//bool verify_kzg_open(const G1 &commitment, const std::vector<Fr> &coeffs, const CRS &crs);
 
-bool verify_kzg_open_d2(const G1 &commitment, const std::vector<std::vector<Fr>> &coeffs, const CRS &crs);
+//bool verify_kzg_open_d2(const G1 &commitment, const std::vector<std::vector<Fr>> &coeffs, const CRS &crs);
 
 std::pair<Fr, G1> kzg_createWitness(const std::vector<Fr> &coeffs, const CRS &crs, const Fr &i);
 

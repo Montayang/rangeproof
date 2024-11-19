@@ -60,15 +60,15 @@ std::pair<std::vector<std::vector<Fr>>, std::vector<std::vector<Fr>>> polynomial
         std::vector<Fr> tmp_dividend;
         for (__int128 i = 0; i < tmp_remainder.size(); ++i) {
             tmp_dividend.push_back(tmp_remainder[i][j]);
-            std::pair<std::vector<Fr>, std::vector<Fr>> tmp = polynomial_division(tmp_dividend, d1);
-            std::vector<Fr> tmpp = tmp.first;
-            std::vector<Fr> tmppp = tmp.second;
-            //for (auto i : tmppp) assert(i == 0);
-            for (__int128 i = 0; i < tmp_remainder.size(); ++i) {
-                if (i < tmpp.size()) quotient_x[i][j] = tmpp[i];
-                else quotient_x[i][j] = 0;
-            }
         }
+        std::pair<std::vector<Fr>, std::vector<Fr>> tmp = polynomial_division(tmp_dividend, d1);
+        std::vector<Fr> tmpp = tmp.first;
+        std::vector<Fr> tmppp = tmp.second;
+        //for (auto i : tmppp) assert(i == 0);
+        for (__int128 i = 0; i < tmp_remainder.size(); ++i) {
+            if (i < tmpp.size()) quotient_x[i][j] = tmpp[i];
+            else quotient_x[i][j] = 0;
+        }  
     }
     // for (__int128 i = 0; i < 10; i++) {
     //     Fr ff1, ff2;
@@ -79,32 +79,43 @@ std::pair<std::vector<std::vector<Fr>>, std::vector<std::vector<Fr>>> polynomial
     return make_pair(quotient_x, quotient_y);
 }
 
-CRS kzg_setup(const G1 &g1, const G2 &g2, const __int128 &t1, const __int128 &t2) {
+// CRS kzg_setup(const G1 &g1, const G2 &g2, const __int128 &t1, const __int128 &t2) {
+//     CRS crs;
+//     crs.SK1.setRand();
+//     crs.SK2.setRand();
+//     crs.g1 = g1;
+//     crs.g2 = g2;
+//     std::vector<G1> tmp;
+//     Fr cur = 1;
+//     for (__int128 i = 0; i <= t1; i++) {
+//         tmp.push_back(g1 * cur);
+//         cur *= crs.SK1;
+//     }
+//     crs.PK1 = make_pair(tmp, g2 * crs.SK1);
+//     std::vector<std::vector<G1>> tmp2;
+//     cur = 1;
+//     for (__int128 i = 0; i <= t1; i++) {
+//         std::vector<G1> vec;
+//         tmp2.push_back(vec);
+//         Fr cur2 = 1;
+//         for (__int128 j = 0; j <= t2; j++) {
+//             tmp2[i].push_back(g1 * cur * cur2);
+//             cur2 *= crs.SK2;
+//         }
+//         cur *= crs.SK1;
+//     }
+//     crs.PK2 = make_pair(tmp2, g2 * crs.SK2);
+//     return crs;
+// }
+
+CRS kzg_setup(const G1 &g1, const G2 &g2) {
     CRS crs;
     crs.SK1.setRand();
     crs.SK2.setRand();
     crs.g1 = g1;
     crs.g2 = g2;
-    std::vector<G1> tmp;
-    Fr cur = 1;
-    for (__int128 i = 0; i <= t1; i++) {
-        tmp.push_back(g1 * cur);
-        cur *= crs.SK1;
-    }
-    crs.PK1 = make_pair(tmp, g2 * crs.SK1);
-    std::vector<std::vector<G1>> tmp2;
-    cur = 1;
-    for (__int128 i = 0; i <= t1; i++) {
-        std::vector<G1> vec;
-        tmp2.push_back(vec);
-        Fr cur2 = 1;
-        for (__int128 j = 0; j <= t2; j++) {
-            tmp2[i].push_back(g1 * cur * cur2);
-            cur2 *= crs.SK2;
-        }
-        cur *= crs.SK1;
-    }
-    crs.PK2 = make_pair(tmp2, g2 * crs.SK2);
+    crs.PK1 = g2 * crs.SK1;
+    crs.PK2 = g2 * crs.SK2;
     return crs;
 }
 
@@ -120,25 +131,25 @@ G1 kzg_commit_d2(const std::vector<std::vector<Fr>> &coeffs, const CRS &crs) {
     return commitment;
 }
 
-bool verify_kzg_open(const G1 &commitment, const std::vector<Fr> &coeffs, const CRS &crs) {
-    G1 eval;
-    eval -= eval; //set eval = 0
-    for (__int128 i = 0; i < coeffs.size(); ++i) {
-        eval += crs.PK1.first[i] * coeffs[i];
-    }
-    return commitment == eval;
-}
+// bool verify_kzg_open(const G1 &commitment, const std::vector<Fr> &coeffs, const CRS &crs) {
+//     G1 eval;
+//     eval -= eval; //set eval = 0
+//     for (__int128 i = 0; i < coeffs.size(); ++i) {
+//         eval += crs.PK1.first[i] * coeffs[i];
+//     }
+//     return commitment == eval;
+// }
 
-bool verify_kzg_open_d2(const G1 &commitment, const std::vector<std::vector<Fr>> &coeffs, const CRS &crs) {
-    G1 eval;
-    eval -= eval; //set eval = 0
-    for (__int128 i = 0; i < coeffs.size(); ++i) {
-        for (__int128 j = 0; j < coeffs[i].size(); ++j) {
-            eval += crs.PK2.first[i][j] * coeffs[i][j];
-        }
-    }
-    return commitment == eval;
-}
+// bool verify_kzg_open_d2(const G1 &commitment, const std::vector<std::vector<Fr>> &coeffs, const CRS &crs) {
+//     G1 eval;
+//     eval -= eval; //set eval = 0
+//     for (__int128 i = 0; i < coeffs.size(); ++i) {
+//         for (__int128 j = 0; j < coeffs[i].size(); ++j) {
+//             eval += crs.PK2.first[i][j] * coeffs[i][j];
+//         }
+//     }
+//     return commitment == eval;
+// }
 
 std::pair<Fr, G1> kzg_createWitness(const std::vector<Fr> &coeffs, const CRS &crs, const Fr &i) {
     Fr Phi_i;
@@ -183,7 +194,7 @@ std::pair<Fr, std::pair<G1, G1>> kzg_createWitness_d2(const std::vector<std::vec
 bool kzg_verifyEval(const G1 &commitment, const CRS &crs, const Fr &i, const Fr &Phi_i, const G1 &witness) {
     GT lhs, rhs1, rhs2;
     pairing(lhs, commitment, crs.g2);
-    pairing(rhs1, witness, crs.PK1.second - crs.g2 * i);
+    pairing(rhs1, witness, crs.PK1 - crs.g2 * i);
     pairing(rhs2, crs.g1, crs.g2);
     GT::pow(rhs2, rhs2, Phi_i);
     return lhs == rhs1 * rhs2;
@@ -192,8 +203,8 @@ bool kzg_verifyEval(const G1 &commitment, const CRS &crs, const Fr &i, const Fr 
 bool kzg_verifyEval_d2(const G1 &commitment, const CRS &crs, const Fr &i, const Fr &j, const Fr &Phi_ij, const std::pair<G1, G1> &witness) {
     GT lhs, rhs1, rhs2, rhs3;
     pairing(lhs, commitment, crs.g2);
-    pairing(rhs1, witness.first, crs.PK1.second - crs.g2 * i);
-    pairing(rhs2, witness.second, crs.PK2.second - crs.g2 * j);
+    pairing(rhs1, witness.first, crs.PK1 - crs.g2 * i);
+    pairing(rhs2, witness.second, crs.PK2 - crs.g2 * j);
     pairing(rhs3, crs.g1, crs.g2);
     GT::pow(rhs3, rhs3, Phi_ij);
     return lhs == rhs1 * rhs2 * rhs3;
