@@ -18,21 +18,13 @@ std::pair<std::vector<Fr>, std::vector<Fr>> polynomial_division(const std::vecto
 std::pair<std::vector<std::vector<Fr>>, std::vector<std::vector<Fr>>> polynomial_division_d2(const std::vector<std::vector<Fr>> &f, const std::vector<Fr> &d1, const std::vector<Fr> &d2);
 
 struct CRS {
-    Fr SK1;
-    Fr SK2; //for kzg_d2
     G1 g1;
     G2 g2;
-    //for open
-    //std::pair<std::vector<G1>, G2> PK1; //first is i * g1, second is sk * g2
-    //std::pair<std::vector<std::vector<G1>>, G2> PK2; //for kzg_d2
-    G2 PK1;
-    G2 PK2;
+    std::pair<std::vector<G1>, G2> PK1; //first is i * g1, second is sk * g2
+    std::pair<std::vector<std::vector<G1>>, G2> PK2; //for kzg_d2
 };
 
-//CRS kzg_setup(const G1 &g1, const G2 &g2, const __int128 &t1, const __int128 &t2);
-
-CRS kzg_setup(const G1 &g1, const G2 &g2);
-
+CRS kzg_setup(const G1 &g1, const G2 &g2, const int &t1, const int &t2);
 
 G1 kzg_commit(const std::vector<Fr> &coeffs, const CRS &crs);
 
