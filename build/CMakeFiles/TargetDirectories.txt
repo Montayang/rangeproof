@@ -1,3 +1,3 @@
-/home/guest/zsf/yxy/protocol/build/CMakeFiles/main.dir
-/home/guest/zsf/yxy/protocol/build/CMakeFiles/edit_cache.dir
-/home/guest/zsf/yxy/protocol/build/CMakeFiles/rebuild_cache.dir
+/mnt/f/research/with_jiaheng/zk/rangeproof/protocol/build/CMakeFiles/main.dir
+/mnt/f/research/with_jiaheng/zk/rangeproof/protocol/build/CMakeFiles/edit_cache.dir
+/mnt/f/research/with_jiaheng/zk/rangeproof/protocol/build/CMakeFiles/rebuild_cache.dir
