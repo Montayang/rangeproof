@@ -12,8 +12,12 @@ Some tools are implemented:
 - uni-veriate kzg, bi-veriate kzg
 - sumset representation
 
+<<<<<<< HEAD
 Some baseline protocol implemented:
 - Plookup
 - Bulletproof(not finished)
 
 Each protocol output the prover time, the verifier time and proof size.
+=======
+Output the prover time, the verifier time
+>>>>>>> ea97283b7d0d33a96163f269cae4f9e92a8490e0

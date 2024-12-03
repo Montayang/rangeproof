@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 /usr/bin/c++  -m64  -Wl,--no-relax CMakeFiles/main.dir/zk_PIOP.cpp.o CMakeFiles/main.dir/kzg.cpp.o CMakeFiles/main.dir/subgroups.cpp.o -o main   -L/mnt/f/research/with_jiaheng/zk/rangeproof/protocol/mcl/lib  -Wl,-rpath,/mnt/f/research/with_jiaheng/zk/rangeproof/protocol/mcl/lib -lmcl -lmclbn256 /usr/lib/x86_64-linux-gnu/libgmp.so /usr/lib/x86_64-linux-gnu/libgmpxx.so 
+=======
+/usr/bin/c++ CMakeFiles/main.dir/zk_PIOP.cpp.o CMakeFiles/main.dir/kzg.cpp.o CMakeFiles/main.dir/subgroups.cpp.o -o main   -L/home/guest/zsf/yxy/protocol/mcl/lib  -Wl,-rpath,/home/guest/zsf/yxy/protocol/mcl/lib -lmcl /usr/lib/x86_64-linux-gnu/libgmp.so /usr/lib/x86_64-linux-gnu/libgmpxx.so
+>>>>>>> ea97283b7d0d33a96163f269cae4f9e92a8490e0
