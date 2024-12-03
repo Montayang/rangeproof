@@ -1,0 +1,1 @@
+/usr/bin/c++  -m64  -Wl,--no-relax CMakeFiles/main.dir/plookup.cpp.o CMakeFiles/main.dir/kzg.cpp.o CMakeFiles/main.dir/subgroups.cpp.o -o main   -L/home/guest/zsf/yxy/protocol/mcl/lib  -Wl,-rpath,/home/guest/zsf/yxy/protocol/mcl/lib -lmcl -lmclbn256 /usr/lib/x86_64-linux-gnu/libgmp.so /usr/lib/x86_64-linux-gnu/libgmpxx.so
