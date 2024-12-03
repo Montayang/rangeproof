@@ -139,7 +139,6 @@ CMakeFiles/main.dir/kzg.cpp.o: \
  /usr/include/c++/7/bits/stl_relops.h \
  /usr/include/c++/7/bits/stl_vector.h \
  /usr/include/c++/7/bits/stl_bvector.h /usr/include/c++/7/bits/vector.tcc \
- /mnt/f/research/with_jiaheng/zk/rangeproof/protocol/mcl/include/mcl/bls12_381.hpp \
  /mnt/f/research/with_jiaheng/zk/rangeproof/protocol/mcl/include/mcl/bn.hpp \
  /mnt/f/research/with_jiaheng/zk/rangeproof/protocol/mcl/include/mcl/fp_tower.hpp \
  /mnt/f/research/with_jiaheng/zk/rangeproof/protocol/mcl/include/mcl/fp.hpp \

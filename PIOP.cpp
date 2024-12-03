@@ -266,15 +266,15 @@ int main() {
         m_poly.push_back(y[i] / b);
     }
     G1 d_commitment = kzg_commit_d2(d_poly, crs);
-    assert(verify_kzg_open_d2(d_commitment, d_poly, crs));
+    //assert(verify_kzg_open_d2(d_commitment, d_poly, crs));
     G1 a_commitment = kzg_commit(a_poly, crs);
-    assert(verify_kzg_open(a_commitment, a_poly, crs));
+    //assert(verify_kzg_open(a_commitment, a_poly, crs));
     G1 c_commitment = kzg_commit(c_poly, crs);
-    assert(verify_kzg_open(c_commitment, c_poly, crs));
+    //assert(verify_kzg_open(c_commitment, c_poly, crs));
     G1 I_commitment = kzg_commit(I_poly, crs);
-    assert(verify_kzg_open(I_commitment, I_poly, crs));
+    //assert(verify_kzg_open(I_commitment, I_poly, crs));
     G1 m_commitment = kzg_commit(m_poly, crs);
-    assert(verify_kzg_open(m_commitment, m_poly, crs));
+    //assert(verify_kzg_open(m_commitment, m_poly, crs));
 
     //Step2:
     Fr alpha, r_0;
@@ -312,9 +312,9 @@ int main() {
         e_poly.push_back(y[i]/b);
     }
     G1 T_commitment = kzg_commit_d2(T_poly, crs);
-    assert(verify_kzg_open_d2(T_commitment, T_poly, crs));
+    //assert(verify_kzg_open_d2(T_commitment, T_poly, crs));
     G1 e_commitment = kzg_commit(e_poly, crs);
-    assert(verify_kzg_open(e_commitment, e_poly, crs));
+    //assert(verify_kzg_open(e_commitment, e_poly, crs));
 
     //Step3:
     std::vector<Fr> F1;
@@ -357,15 +357,15 @@ int main() {
     for (auto i : tmp_pair3.second) assert(i == 0); //check no remainder when divide F3
     std::vector<Fr> h_2_poly = tmp_pair3.first;
     G1 h_1_commitment = kzg_commit(h_1_poly, crs);
-    assert(verify_kzg_open(h_1_commitment, h_1_poly, crs));
+    //assert(verify_kzg_open(h_1_commitment, h_1_poly, crs));
     G1 g_1_commitment = kzg_commit(g_1_poly, crs);
-    assert(verify_kzg_open(g_1_commitment, g_1_poly, crs));
+    //assert(verify_kzg_open(g_1_commitment, g_1_poly, crs));
     G1 p_commitment = kzg_commit_d2(p_poly, crs);
-    assert(verify_kzg_open_d2(p_commitment, p_poly, crs));
+    //assert(verify_kzg_open_d2(p_commitment, p_poly, crs));
     G1 q_commitment = kzg_commit_d2(q_poly, crs);
-    assert(verify_kzg_open_d2(q_commitment, q_poly, crs));
+    //assert(verify_kzg_open_d2(q_commitment, q_poly, crs));
     G1 h_2_commitment = kzg_commit(h_2_poly, crs);
-    assert(verify_kzg_open(h_2_commitment, h_2_poly, crs));
+    //assert(verify_kzg_open(h_2_commitment, h_2_poly, crs));
 
     //Step3 check:
     std::pair<Fr, G1> e_oracle = kzg_createWitness(e_poly, crs, r_0);

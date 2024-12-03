@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/mnt/f/research/with_jiaheng/zk/rangeproof/protocol/mcl/include
 
-CXX_FLAGS = -std=gnu++1z
+CXX_FLAGS =  -m64 -std=gnu++1z
 
