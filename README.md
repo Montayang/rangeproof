@@ -14,6 +14,6 @@ Some tools are implemented:
 
 Some baseline protocol implemented:
 - Plookup
-- Bulletproof(not finished)
+- Bulletproof
 
 Each protocol outputs the prover time, the verifier time and proof size.

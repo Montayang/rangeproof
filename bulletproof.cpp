@@ -11,12 +11,55 @@
 
 using namespace mcl::bn;
 
-constexpr int n = 4;
-constexpr int R = 1 << n;
-constexpr int MAX_N = 1 << 25;
-Fr* tmp1 = new Fr[MAX_N]; //for NTT innerly
-Fr* y_1 = new Fr[MAX_N];
-Fr* y_2 = new Fr[MAX_N]; // for poly_product and polynomial_extension
+constexpr int n = 64;
+constexpr __int128 R = (__int128)1 << n;
+
+std::chrono::duration<double> prover_time(0);
+std::chrono::duration<double> verifier_time(0);
+size_t proof_size = 0;
+
+std::vector<int> batch_bit_reverse(int log_n) {
+    int n = 1 << log_n;
+    std::vector<int> res(n, 0);
+    for (int i = 0; i < n; ++i) {
+        res[i] = (res[i >> 1] >> 1) | ((i & 1) << (log_n - 1));
+    }
+    return res;
+}
+
+void NTT(std::vector<Fr>& coeff, const subgroup& group, int reverse) {
+    int n = coeff.size();
+    int log_n = static_cast<int>(std::log2(n));
+    auto rank = batch_bit_reverse(log_n);
+
+    for (int i = 0; i < n; ++i) {
+        if (i < rank[i]) {
+            std::swap(coeff[i], coeff[rank[i]]);
+        }
+    }
+
+    int log_m = 0;
+    Fr step = group.getGenerator();
+    if (reverse == -1) step = 1 / step;
+    for (int i = 0; i < log_n; ++i) {
+        Fr w_m;
+        Fr::pow(w_m, step, n >> (log_m + 1));
+        int m = 1 << log_m;
+        for (int j = 0; j < n; j += m * 2) {
+            Fr w = 1;
+            for (int k = 0; k < m; ++k) {
+                Fr t = w * coeff[j + k + m];
+                coeff[j + k + m] = coeff[j + k] - t;
+                coeff[j + k] += t;
+                w *= w_m;
+            }
+        }
+        ++log_m;
+    }
+    if (reverse == -1) {
+        for (int i = 0; i < coeff.size(); i++) coeff[i] /= n;
+    }
+}
 
 void print_int128(__int128 x) {
     if (x == 0) std::cout << "0";
@@ -65,29 +108,6 @@ std::vector<Fr> generate_polynomial(const int &l) {
     return coeffs;
 }
 
-void NTT(Fr* f, int n, const subgroup& group, int reverse) {
-    if (n == 1) return;
-    for (int i = 0; i < n; ++i) tmp1[i] = f[i];
-    for (int i = 0; i < n; ++i) {
-        if (i & 1)
-            f[n / 2 + i / 2] = tmp1[i];
-        else
-            f[i / 2] = tmp1[i];
-    }
-    Fr *g = f, *h = f + n / 2;
-    subgroup newgroup(n / 2);
-    NTT(g, n / 2, newgroup, reverse), NTT(h, n / 2, newgroup, reverse);
-    Fr cur = 1;
-    Fr step = group.getGenerator();
-    if (reverse == -1) step = 1 / step;
-    for (int k = 0; k < n / 2; ++k) {
-        tmp1[k] = g[k] + cur * h[k];
-        tmp1[k + n / 2] = g[k] - cur * h[k];
-        cur *= step;
-    }
-    for (int i = 0; i < n; ++i) f[i] = tmp1[i];
-}
-
 std::vector<Fr> poly_product(const std::vector<Fr>& poly1, const std::vector<Fr>& poly2) {
     int n = 1;
     while (n < poly1.size() + poly2.size()) {
@@ -95,24 +115,37 @@ std::vector<Fr> poly_product(const std::vector<Fr>& poly1, const std::vector<Fr>
     }
     subgroup group(n);
 
-    for (int i = 0; i < n; i++) {
-        if (i < poly1.size()) y_1[i] = poly1[i];
-        else y_1[i] = 0;
-        if (i < poly2.size()) y_2[i] = poly2[i];
-        else y_2[i] = 0;
-    }
-    NTT(y_1, n, group, 1);
-    NTT(y_2, n, group, 1);
+    std::vector<Fr> y_1(n, 0), y_2(n, 0);
+    for (int i = 0; i < poly1.size(); i++) y_1[i] = poly1[i];
+    for (int i = 0; i < poly2.size(); i++) y_2[i] = poly2[i];
+    NTT(y_1, group, 1);
+    NTT(y_2, group, 1);
 
     for (int i = 0; i < n; i++) {
         y_1[i] = y_1[i] * y_2[i];
     }
-    NTT(y_1, n, group, -1);
+    NTT(y_1, group, -1);
     // NTT(y_2, n, group, -1);
     // for (int i = 0; i < n; i++) {std::cout<< y_1[i] << std::endl;}
     // for (int i = 0; i < n; i++) {std::cout<< y_2[i] << std::endl;}
-    std::vector<Fr> result;
-    for (int i = 0; i < n; i++) result.push_back(y_1[i] / n);
+    return y_1;
+}
+
+std::vector<Fr> poly_product_force(const std::vector<Fr>& poly1, const std::vector<Fr>& poly2) {
+    size_t n1 = poly1.size();
+    size_t n2 = poly2.size();
+    size_t result_size = n1 + n2 - 1;
+
+    // 初始化结果多项式的系数为0
+    std::vector<Fr> result(result_size, 0);
+
+    // 暴力计算多项式乘积
+    for (size_t i = 0; i < n1; ++i) {
+        for (size_t j = 0; j < n2; ++j) {
+            result[i + j] += poly1[i] * poly2[j];
+        }
+    }
+
     return result;
 }
 
@@ -123,60 +156,125 @@ Fr vec_product(std::vector<Fr> vec1, std::vector<Fr> vec2) {
     return res;
 }
 
+Fr Fr_pow(const Fr &x, const Fr &y) {
+    Fr tmp;
+    Fr::pow(tmp, x , y);
+    return tmp;
+}
+
+bool Inner_Product_Argument(const std::vector<G1> &g, const std::vector<G1> &h, const G1 &u, const G1 &P, const std::vector<Fr> &a, const std::vector<Fr> &b) {
+    int len = g.size();
+    if (len == 1) {
+        proof_size += sizeof(a[0]) + sizeof(b[0]);
+        auto start = std::chrono::high_resolution_clock::now();
+        Fr c = a[0] * b[0];
+        return (P == g[0] * a[0] + h[0] * b[0] + u * c);
+        auto end = std::chrono::high_resolution_clock::now();
+        verifier_time += end - start;
+    }
+
+    auto start = std::chrono::high_resolution_clock::now();
+    int len_ = len / 2;
+    Fr c_L = 0, c_R = 0;
+    for (int i = 0; i < len_; i++) {
+        c_L += a[i] * b[len_ + i];
+        c_R += a[len_ + i] * b[i];
+    }
+    G1 L, R;
+
+    L = u * c_L;
+    R = u * c_R;
+    for (int i = 0; i < len_; i++) {
+        L += g[len_ + i] * a[i] + h[i] * b[len_ + i];
+        R += g[i] * a[len_ + i] + h[len_ + i] * b[i];
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    prover_time += end - start;
+
+    proof_size += sizeof(L) + sizeof(R);
+
+    Fr x;
+    x.setRand();
+
+    start = std::chrono::high_resolution_clock::now();
+    std::vector<G1> g_(len_), h_(len_);
+    for (int i = 0; i < len_; i++) {
+        g_[i] = g[i] * (1 / x) + g[len_ + i] * x;
+        h_[i] = h[i] * x + h[len_ + i] * (1 / x);
+    }
+    G1 P_ = L * (x * x) + P + R * (1 / x / x);
+    end = std::chrono::high_resolution_clock::now();
+    prover_time += end - start;
+    verifier_time += end - start;
+
+    start = std::chrono::high_resolution_clock::now();
+    std::vector<Fr> a_(len_), b_(len_);
+    for (int i = 0; i < len_; i++) {
+        a_[i] = a[i] * x + a[len_ + i] * (1 / x);
+        b_[i] = b[i] * (1 / x) + b[len_ + i] * x;
+    }
+    end = std::chrono::high_resolution_clock::now();
+    prover_time += end - start;
+
+    return Inner_Product_Argument(g_, h_, u, P_, a_, b_);
+}
+
 int main() {
     initPairing(mcl::BN_SNARK1);
-    G1 g1;
-    hashAndMapToG1(g1, "ab", 2);
-    G2 g2;
-    hashAndMapToG2(g2, "abc", 3);
-    std::chrono::duration<double> prover_time(0);
-    std::chrono::duration<double> verifier_time(0);
-    size_t proof_size = 0;
-
+    G1 g;
+    hashAndMapToG1(g, "ab", 2);
+        
     //input
-    Fr v;
-    v.setStr(generate_eff(R));
-        //v.setStr("1048577"); //for testing over range
-    subgroup H(n);
-    Fr g = H.getGenerator();
-    Fr h, h_seed;
-    h_seed.setStr(generate_eff(n));
-    Fr::pow(h, g, h_seed);
-    Fr V, gamma;
-    gamma.setRand();
-    Fr tmp_V;
-    Fr::pow(tmp_V, g, v);
-    Fr::pow(V, h, gamma);
-    V *= tmp_V;
+    int l = 16384;
+    std::vector<Fr> v;
+    v = generate_polynomial(l);
+        //v[6].setStr("18446744073709551616"); //for testing over range
+    Fr seed;
+    G1 h;
+    seed.setRand();
+    h = g * seed;
+    std::vector<G1> g_vec, h_vec;
+    for (int i = 0; i < n * l; i++) {
+        seed.setRand();
+        g_vec.push_back(g * seed);
+        seed.setRand();
+        h_vec.push_back(g * seed);
+    }
+    std::vector<G1> V(l);
+    std::vector<Fr> gamma(l);
+    for (int j = 0; j < l; j++) {
+        gamma[j].setRand();
+        V[j] = g * v[j] + h * gamma[j];
+    }
     
     //bit decomposition
     std::vector<__int128> G;
     __int128 base = 1;
     for (int i = 0; i < n; i++) {
-        G.push_back(Fr_to_int(base));
+        G.push_back(base);
         base *= 2;
     }
-    std::vector<Fr> a_L,a_R;
-    __int128 v_int = Fr_to_int(v);
-    for (int i = n - 1; i >= 0; i--) {
-        a_L.push_back(v_int / G[i]);
-        v_int = v_int % G[i];
+    auto start = std::chrono::high_resolution_clock::now();
+    std::vector<Fr> a_L(n * l), a_R(n * l);
+    for (int j = 0; j < l; j++) {
+        __int128 v_int = Fr_to_int(v[j]);
+        for (int i = n - 1; i >= 0; i--) {
+            a_L[j * n + i] = v_int / G[i];
+            v_int = v_int % G[i];
+        }
     }
-    for (int i = 0; i < n; i++) a_R[i] = a_L[i] - 1;
+    for (int i = 0; i < n * l; i++) a_R[i] = a_L[i] - 1;
 
     Fr alpha;
     alpha.setRand();
-    Fr A = 0;
-    for (int i = 0; i < n; i++) A += a_R[i];
-    A += alpha;
-    Fr::pow(A, h, A);
-    Fr tmp_A = 0;
-    for (int i = 0; i < n; i++) tmp_A += a_L[i];
-    Fr::pow(tmp_A, g, tmp_A);
-    A *= tmp_A;
+    G1 A;
+    A = h * alpha;
+    for (int i = 0; i < n * l; i++) {
+        A += g_vec[i] * a_L[i] + h_vec[i] * a_R[i];
+    }
     
     std::vector<Fr> s_L, s_R;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n * l; i++) {
         Fr s_L_seed, s_R_seed;
         s_L_seed.setRand();
         s_R_seed.setRand();
@@ -186,45 +284,53 @@ int main() {
 
     Fr rou;
     rou.setRand();
-    Fr S = 0;
-    for (int i = 0; i < n; i++) S += s_R[i];
-    S += rou;
-    Fr::pow(S, h, S);
-    Fr tmp_S = 0;
-    for (int i = 0; i < n; i++) tmp_S += s_L[i];
-    Fr::pow(tmp_S, g, tmp_S);
-    S *= tmp_S;
+    G1 S;
+    S = h * rou;
+    for (int i = 0; i < n * l; i++) {
+        S += g_vec[i] * s_L[i] + h_vec[i] * s_R[i];
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    prover_time += end - start;
 
+    proof_size += sizeof(A) + sizeof(S);
     //A, S sent
     Fr y, z;
     y.setRand();
     z.setRand();
 
+    start = std::chrono::high_resolution_clock::now();
     std::vector<std::vector<Fr>> l_poly, r_poly; //vector polynomial
     std::vector<Fr> t_poly;
-    std::vector<Fr> tmp_l_poly(n, 0);
-    for (int i = 0; i < n; i++) tmp_l_poly[i] = a_L[i] - z;
+    std::vector<Fr> tmp_l_poly(n * l, 0);
+    for (int i = 0; i < n * l; i++) tmp_l_poly[i] = a_L[i] - z;
     l_poly.push_back(tmp_l_poly);
     l_poly.push_back(s_L);
-    std::vector<Fr> tmp_r_poly(n, 0);
+    std::vector<Fr> tmp_r_poly(n * l, 0);
     Fr cur = 1;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n * l; i++) {
         tmp_r_poly[i] = a_R[i] + z;
         tmp_r_poly[i] *= cur;
         cur *= y;
     }
-    cur = 1;
-    for (int i = 0; i < n; i++) {
-        tmp_r_poly[i] += z * z * cur;
-        cur *= 2;
+    
+    Fr cur_z = z * z;
+    for (int j = 0; j < l; j++) {
+        cur = 1;
+        for (int i = 0; i < n; i++) {
+            tmp_r_poly[j * n + i] += cur_z * cur;
+            cur *= 2;
+        }
+        cur_z *= z;
     }
+
     r_poly.push_back(tmp_r_poly);
     cur = 1;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n * l; i++) {
         tmp_r_poly[i] = s_R[i] * cur;
         cur *= y;
     }
     r_poly.push_back(tmp_r_poly);
+
     Fr t_0, t_1, t_2;
     t_0 = vec_product(l_poly[0], r_poly[0]);
     t_1 = vec_product(l_poly[0], r_poly[1]) + vec_product(l_poly[1], r_poly[0]);
@@ -233,31 +339,105 @@ int main() {
     t_poly.push_back(t_1);
     t_poly.push_back(t_2);
 
+    Fr delta;
+    Fr y_nl, two_n;
+    y_nl = Fr_pow(y, n * l);
+    two_n = Fr_pow(2, n);
+    delta = (y_nl - 1) / (y - 1) * (z - z * z);
+    cur_z = z * z * z;
+    for (int j = 0; j < l; j++) {
+        delta -= (two_n - 1) * cur_z;
+        cur_z *= z;
+    }
+
+        // Fr check_t = delta;
+        // cur_z = z*z;
+        // for (int j = 0; j < l; j++) {
+        //     check_t += cur_z * v[j];
+        //     cur_z *= z;
+        // }
+        // assert(t_0 == check_t);
+
     Fr tao_1, tao_2;
     tao_1.setRand();
     tao_2.setRand();
-    Fr T_1, T_2;
-    Fr tmp_T;
-    Fr::pow(tmp_T, h, tao_1);
-    Fr::pow(T_1, g, t_1);
-    T_1 *= tmp_T;
-    Fr::pow(tmp_T, h, tao_2);
-    Fr::pow(T_2, g, t_2);
-    T_2 *= tmp_T;
+    G1 T_1, T_2;
+    T_1 = g * t_1 + h * tao_1;
+    T_2 = g * t_2 + h * tao_2;
+    end = std::chrono::high_resolution_clock::now();
+    prover_time += end - start;
 
+    proof_size += sizeof(T_1) + sizeof(T_2);
     //T_1, T_2 sent
     Fr x;
     x.setRand();
 
-    std::vector<Fr> l = l_poly[0];
-    for (int i = 0; i < n; i++) l[i] += l_poly[1][i] * x;
-    std::vector<Fr> r = r_poly[0];
-    for (int i = 0; i < n; i++) r[i] += r_poly[1][i] * x;
-    Fr t_hat = vec_product(l, r);
-    Fr tao_x = tao_2 * x * x + tao_1 * x + z * z * gamma;
+    start = std::chrono::high_resolution_clock::now();
+    std::vector<Fr> l_vec = l_poly[0];
+    for (int i = 0; i < n * l; i++) l_vec[i] += l_poly[1][i] * x;
+    std::vector<Fr> r_vec = r_poly[0];
+    for (int i = 0; i < n * l; i++) r_vec[i] += r_poly[1][i] * x;
+    Fr t_hat = vec_product(l_vec, r_vec);
+    Fr tao_x = tao_2 * x * x + tao_1 * x;
+    cur_z = z * z;
+    for (int j = 0; j < l; j++) {
+        tao_x += cur_z * gamma[j];
+        cur_z *= z;
+    }
     Fr miu = alpha + rou * x;
+    end = std::chrono::high_resolution_clock::now();
+    prover_time += end - start;
 
-    
+    proof_size += sizeof(tao_x) + sizeof(miu) + sizeof(t_hat) + sizeof(l_vec) + sizeof(r_vec);
+
+    start = std::chrono::high_resolution_clock::now();
+    std::vector<G1> h_vec_prime(n * l);
+    Fr cur_y = 1;
+    for (int i = 0; i < n * l; i++) {
+        h_vec_prime[i] = h_vec[i] * cur_y;
+        cur_y *= (1 / y);
+    }
+
+    G1 lhs, rhs;
+    lhs = g * t_hat + h * tao_x;
+    rhs = g * delta + T_1 * x + T_2 * (x * x);
+    cur_z = 1;
+    for (int j = 0; j < l; j++) {
+        rhs += V[j] * (z * z * cur_z);
+        cur_z *= z;
+    }
+    assert(lhs == rhs);
+
+    G1 P = A + S * x;
+    cur_y = 1;
+    for (int i = 0; i < n * l; i++) {
+        P += g_vec[i] * (-z) + h_vec_prime[i] * (z * cur_y);
+        cur_y *= y;
+    }
+    cur_z = z * z;
+    for (int j = 0; j < l; j++) {
+        cur = 1;
+        for (int i = 0; i < n; i++) {
+            P += h_vec_prime[j * n + i] * cur_z * cur;
+            cur *= 2;
+        }
+        cur_z *= z;
+    }
+
+    rhs = h * miu;
+    for (int i = 0; i < n * l; i++) {
+        rhs += g_vec[i] * l_vec[i] + h_vec_prime[i] * r_vec[i];
+    }
+    assert(P == rhs);
+    end = std::chrono::high_resolution_clock::now();
+    verifier_time += end - start;
+
+    seed.setRand();
+    G1 u = g * seed;
+    Fr xx;
+    xx.setRand();
+    G1 P_prime = P + h * (-miu) + u * (x * t_hat);
+    assert(Inner_Product_Argument(g_vec, h_vec_prime, u * x, P_prime, l_vec, r_vec));
 
     std::cout << "1" << std::endl;
 
