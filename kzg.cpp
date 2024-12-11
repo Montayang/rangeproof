@@ -1,6 +1,18 @@
 #include "kzg.h"
 #include <unordered_map>
 
+int Batching_witness::size() {
+    int res = G1::getSerializedByteSize();
+    res += (evals.size() + r_batching.size()) * sizeof(Fr);
+    return res;
+} 
+
+int Batching_witness_d2::size() {
+    int res = 2 * G1::getSerializedByteSize();
+    res += (evals.size() + r_batching.size()) * sizeof(Fr);
+    return res;
+} 
+
 // G1 pippenger(const std::vector<Fr>& scalars, const std::vector<G1>& points, int window_size = 4) {
 //     size_t n = scalars.size();
 

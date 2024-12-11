@@ -28,6 +28,8 @@ struct Batching_witness {
     G1 witness1;
     std::vector<Fr> evals;
     std::vector<Fr> r_batching;
+
+    int size();
 };
 
 struct Batching_witness_d2 {
@@ -35,6 +37,8 @@ struct Batching_witness_d2 {
     G1 witness2;
     std::vector<Fr> evals;
     std::vector<Fr> r_batching;
+
+    int size();
 };
 
 CRS kzg_setup(const G1 &g1, const G2 &g2, const int &t1, const int &t2);

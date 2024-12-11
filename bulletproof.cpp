@@ -191,7 +191,7 @@ bool Inner_Product_Argument(const std::vector<G1> &g, const std::vector<G1> &h, 
     auto end = std::chrono::high_resolution_clock::now();
     prover_time += end - start;
 
-    proof_size += sizeof(L) + sizeof(R);
+    proof_size += 2 * G1::getSerializedByteSize();//L, R
 
     Fr x;
     x.setRand();
@@ -229,6 +229,7 @@ int main() {
     std::vector<Fr> v;
     v = generate_polynomial(l);
         //v[6].setStr("18446744073709551616"); //for testing over range
+        //std::cout << sizeof(v) <<"  "<< sizeof(g)<<"  "<<G1::getSerializedByteSize()<<std::endl;
     Fr seed;
     G1 h;
     seed.setRand();
@@ -292,7 +293,7 @@ int main() {
     auto end = std::chrono::high_resolution_clock::now();
     prover_time += end - start;
 
-    proof_size += sizeof(A) + sizeof(S);
+    proof_size += 2 * G1::getSerializedByteSize(); //A, S
     //A, S sent
     Fr y, z;
     y.setRand();
@@ -367,7 +368,7 @@ int main() {
     end = std::chrono::high_resolution_clock::now();
     prover_time += end - start;
 
-    proof_size += sizeof(T_1) + sizeof(T_2);
+    proof_size += 2 * G1::getSerializedByteSize(); //T_1, T_2
     //T_1, T_2 sent
     Fr x;
     x.setRand();

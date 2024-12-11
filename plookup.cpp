@@ -300,7 +300,7 @@ int main() {
         test_time = end - start;
         std::cout << "input commited  " << test_time.count() << std::endl;
 
-    proof_size += sizeof(f_commitment) + sizeof(h_1_commitment) + sizeof(h_2_commitment);
+    proof_size += 3 * G1::getSerializedByteSize(); //f, h_1, h_2
 
     //verifier construct beta, gamma
     Fr beta, gamma;
@@ -442,7 +442,7 @@ int main() {
         test_time = end - start;
         std::cout << "g commited  " << test_time.count() << std::endl;
 
-    proof_size += sizeof(Z_commitment) + sizeof(g_4_commitment);
+    proof_size += 2 * G1::getSerializedByteSize(); //Z, g_4
 
     //Verify Phase
     Fr r_0;
@@ -514,7 +514,7 @@ int main() {
     end = std::chrono::high_resolution_clock::now();
     verifier_time += end - start;
 
-    proof_size += sizeof(batching1) + sizeof(batching2);
+    proof_size += batching1.size() + batching2.size();
 
     std::cout << "1" << std::endl;
 

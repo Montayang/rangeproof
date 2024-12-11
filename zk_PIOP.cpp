@@ -208,7 +208,7 @@ int main() {
     Fr R;
     int b, k, l;
     R.setStr("18446744073709551615"); //2^64 - 1
-    b = 64, k = 16, l = 32;
+    b = 65536, k = 4, l = 16384;
     std::vector<Fr> a = generate_polynomial(l);
     std::vector<Fr> G = sumset_representation(R, b);
     CRS crs = kzg_setup(g1, g2, b + 3, 2 * k + 3);
@@ -350,19 +350,22 @@ int main() {
     m_poly_prime[0] -= s_0;
 
     G1 d_prime_commitment = kzg_commit_d2(d_poly_prime, crs);
+    auto end = std::chrono::high_resolution_clock::now();
+    prover_time += end - start;
     //assert(verify_kzg_open_d2(d_commitment, d_poly, crs));
     G1 a_prime_commitment = kzg_commit_d2(a_poly_prime, crs);
     //assert(verify_kzg_open(a_commitment, a_poly, crs));
     G1 c_commitment = kzg_commit(c_poly, crs);
     //assert(verify_kzg_open(c_commitment, c_poly, crs));
+    start = std::chrono::high_resolution_clock::now();
     G1 I_commitment = kzg_commit(I_poly, crs);
     //assert(verify_kzg_open(I_commitment, I_poly, crs));
     G1 m_prime_commitment = kzg_commit(m_poly_prime, crs);
     //assert(verify_kzg_open(m_commitment, m_poly, crs));
-    auto end = std::chrono::high_resolution_clock::now();
+    end = std::chrono::high_resolution_clock::now();
     prover_time += end - start;
 
-    proof_size += sizeof(d_prime_commitment) + sizeof(a_prime_commitment) + sizeof(c_commitment) + sizeof(I_commitment) + sizeof(m_prime_commitment);
+    proof_size += 5 * G1::getSerializedByteSize(); //d, a, c, I, m
 
     std::cout << "Step1 Completed." << std::endl;
 
@@ -420,7 +423,7 @@ int main() {
     //assert(verify_kzg_open_d2(T_prime_commitment, T_poly, crs));
     G1 e_prime_commitment = kzg_commit(e_poly_prime, crs);
     //assert(verify_kzg_open(e_prime_commitment, e_poly_prime, crs));
-    proof_size += sizeof(T_prime_commitment) + sizeof(e_prime_commitment);
+    proof_size += 2 * G1::getSerializedByteSize(); //T, e
 
     std::cout << "Step2 Completed." << std::endl;
 
@@ -519,7 +522,7 @@ int main() {
     //assert(verify_kzg_open(h_2_commitment, h_2_poly, crs));
 
     std::cout << "Step3 Preparing Completed." << std::endl;
-    proof_size += sizeof(h_1_commitment) + sizeof(g_1_commitment) + sizeof(p_commitment) + sizeof(q_commitment) + sizeof(h_2_commitment);
+    proof_size += 5 * G1::getSerializedByteSize(); //h_1, g_1, p, q, h_2
 
     //Step3 check:
     // std::pair<Fr, G1> e_oracle = kzg_createWitness(e_poly_prime, crs, r_0);// no batching
@@ -537,7 +540,7 @@ int main() {
     std::pair<Fr, G1> e_oracle_0 = kzg_createWitness(e_poly_prime, crs, 0);
     end = std::chrono::high_resolution_clock::now();
     prover_time += end - start;
-    proof_size += sizeof(batching1) + sizeof(T_oracle) + sizeof(e_oracle_0);
+    proof_size += batching1.size() + 2 * sizeof(Fr) + 3 * G1::getSerializedByteSize(); //T, e oracle
 
     start = std::chrono::high_resolution_clock::now();
     // assert(kzg_verifyEval(e_prime_commitment, crs, r_0, e_oracle.first, e_oracle.second));// no batching
@@ -595,7 +598,7 @@ int main() {
 
     end = std::chrono::high_resolution_clock::now();
     prover_time += end - start;
-    proof_size += sizeof(batching2) + sizeof(batching_d2);
+    proof_size += batching2.size() + batching_d2.size();
 
     start = std::chrono::high_resolution_clock::now();
 
