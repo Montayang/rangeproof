@@ -215,6 +215,8 @@ bool Inner_Product_Argument(const std::vector<G1> &g, const std::vector<G1> &h, 
     }
     end = std::chrono::high_resolution_clock::now();
     prover_time += end - start;
+    
+    proof_size += sizeof(a_) + sizeof(b_);
 
     return Inner_Product_Argument(g_, h_, u, P_, a_, b_);
 }
