@@ -168,8 +168,8 @@ bool Inner_Product_Argument(const std::vector<G1> &g, const std::vector<G1> &h, 
         proof_size += sizeof(a[0]) + sizeof(b[0]);
         auto start = std::chrono::high_resolution_clock::now();
         Fr c = a[0] * b[0];
-        return (P == g[0] * a[0] + h[0] * b[0] + u * c);
         auto end = std::chrono::high_resolution_clock::now();
+        return (P == g[0] * a[0] + h[0] * b[0] + u * c);
         verifier_time += end - start;
     }
 
@@ -202,10 +202,11 @@ bool Inner_Product_Argument(const std::vector<G1> &g, const std::vector<G1> &h, 
         g_[i] = g[i] * (1 / x) + g[len_ + i] * x;
         h_[i] = h[i] * x + h[len_ + i] * (1 / x);
     }
+    auto start_ = std::chrono::high_resolution_clock::now();
     G1 P_ = L * (x * x) + P + R * (1 / x / x);
     end = std::chrono::high_resolution_clock::now();
     prover_time += end - start;
-    verifier_time += end - start;
+    verifier_time += end - start_;
 
     start = std::chrono::high_resolution_clock::now();
     std::vector<Fr> a_(len_), b_(len_);
@@ -392,8 +393,7 @@ int main() {
     prover_time += end - start;
 
     proof_size += sizeof(tao_x) + sizeof(miu) + sizeof(t_hat) + sizeof(l_vec) + sizeof(r_vec);
-
-    start = std::chrono::high_resolution_clock::now();
+    
     std::vector<G1> h_vec_prime(n * l);
     Fr cur_y = 1;
     for (int i = 0; i < n * l; i++) {
@@ -401,9 +401,12 @@ int main() {
         cur_y *= (1 / y);
     }
 
+    start = std::chrono::high_resolution_clock::now();
     G1 lhs, rhs;
     lhs = g * t_hat + h * tao_x;
     rhs = g * delta + T_1 * x + T_2 * (x * x);
+    end = std::chrono::high_resolution_clock::now();
+    verifier_time += end - start;
     cur_z = 1;
     for (int j = 0; j < l; j++) {
         rhs += V[j] * (z * z * cur_z);
@@ -411,7 +414,10 @@ int main() {
     }
     assert(lhs == rhs);
 
+    start = std::chrono::high_resolution_clock::now();
     G1 P = A + S * x;
+    end = std::chrono::high_resolution_clock::now();
+    verifier_time += end - start;
     cur_y = 1;
     for (int i = 0; i < n * l; i++) {
         P += g_vec[i] * (-z) + h_vec_prime[i] * (z * cur_y);
@@ -427,6 +433,7 @@ int main() {
         cur_z *= z;
     }
 
+    start = std::chrono::high_resolution_clock::now();
     rhs = h * miu;
     for (int i = 0; i < n * l; i++) {
         rhs += g_vec[i] * l_vec[i] + h_vec_prime[i] * r_vec[i];
