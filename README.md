@@ -9,7 +9,7 @@ Some tools are implemented:
 - uni-veriate NTT and INTT, bi-veriate NTT and INTT(no-recursion version)
 - uni-veriate polynomial product, bi-veriate polynomial product
 - uni-veriate polynomial division, bi-veriate polynomial division(not optimal)
-- uni-veriate kzg, bi-veriate kzg
+- uni-veriate kzg, bi-veriate kzg and batching version of each of them
 - sumset representation
 
 Some baseline protocol implemented:
