@@ -522,7 +522,7 @@ int main() {
     //assert(verify_kzg_open(h_2_commitment, h_2_poly, crs));
 
     std::cout << "Step3 Preparing Completed." << std::endl;
-    proof_size += 5 * G1::getSerializedByteSize(); //h_1, g_1, p, q, h_2
+    proof_size += 9 * G1::getSerializedByteSize();
 
     //Step3 check:
     // std::pair<Fr, G1> e_oracle = kzg_createWitness(e_poly_prime, crs, r_0);// no batching
