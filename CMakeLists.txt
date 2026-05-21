@@ -13,4 +13,4 @@ find_library(GMPXX_LIB gmpxx)
 
 add_executable(main zk_PIOP.cpp kzg.cpp subgroups.cpp)
 
-target_link_libraries(main mcl mclbn384_256 ${GMP_LIB} ${GMPXX_LIB})
+target_link_libraries(main ${CMAKE_SOURCE_DIR}/mcl/lib/libmcl.a ${GMP_LIB} ${GMPXX_LIB})
