@@ -40,7 +40,7 @@ The protocol strictly depends on the `mcl` library (V3+). Please follow these ex
 ### Step 3.1: Clone the Repository
 
 ```bash
-git clone [https://github.com/YOUR_USERNAME/rangeproof-main.git](https://github.com/YOUR_USERNAME/rangeproof-main.git)
+git clone [https://github.com/Montayang/rangeproof-main.git](https://github.com/Montayang/rangeproof-main.git)
 cd rangeproof-main
 ```
 
