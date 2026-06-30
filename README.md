@@ -40,7 +40,7 @@ The protocol strictly depends on the `mcl` library (V3+). Please follow these ex
 ### Step 3.1: Clone the Repository
 
 ```bash
-git clone [https://github.com/Montayang/rangeproof-main.git](https://github.com/Montayang/rangeproof-main.git)
+git clone https://github.com/Montayang/rangeproof-main.git
 cd rangeproof-main
 ```
 
@@ -50,7 +50,7 @@ The project expects the `mcl` library to be located in the root directory.
 
 ```bash
 # Clone the mcl library directly into the project root
-git clone [https://github.com/herumi/mcl.git](https://github.com/herumi/mcl.git)
+git clone https://github.com/herumi/mcl.git
 
 # Compile the mcl core library
 cd mcl
@@ -68,7 +68,8 @@ We use CMake to configure and build the project.
 ```bash
 mkdir -p build
 cd build
-rm -rf * cmake ..
+rm -rf *
+cmake ..
 make -j4
 ```
 
