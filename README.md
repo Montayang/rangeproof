@@ -41,7 +41,7 @@ The protocol strictly depends on the `mcl` library (V3+). Please follow these ex
 
 ```bash
 git clone https://github.com/Montayang/rangeproof.git
-cd rangeproof-main
+cd rangeproof
 ```
 
 ### Step 3.2: Fetch and Build `mcl`
