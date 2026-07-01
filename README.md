@@ -107,23 +107,37 @@ Proof Size: <size_in_KB> KB
 
 ## 5. Detailed Benchmarks (Results Reproduced)
 
-### Main Protocol (Rarus)
+To maintain absolute transparency and avoid obfuscating the core logic with complex wrapper scripts, we expose the benchmarking parameters directly in the source code. Reviewers can verify and modify the parameters (polynomial size, range, # of elements) directly.
 
-Running `./main` evaluates the core protocol. 
+### Parameter Mapping to the Paper
 
-* **Prover Time, Verifier Time & Proof Size:** The outputted time (in seconds) corresponds to the performance evaluations shown in **Figure 3 / Figure 4 / Table 8 / Table 9** of the paper.
+* **Table 3 parameters** map to the results in **Table 8**.
+* **Table 4 parameters** map to the results in **Table 9**.
+* The outputs correspond to the data points in **Figure 3 and Figure 4**.
 
-### Baselines (Plookup & Bulletproofs)
+### How to Modify Parameters
 
-To run the baseline comparisons evaluated in the paper:
+Before running `make`, you can adjust the testing parameters by modifying the following lines in the source code:
 
+* **Rarus (Main Protocol):** Edit line `211` in `zk_PIOP.cpp`.
+* **Bulletproofs Baseline:** Edit line `231` in `bulletproof.cpp`.
+* **Plookup Baseline:** Edit line `196` in `plookup.cpp`.
+
+After modifying the parameters, simply rebuild the executables:
 ```bash
-# Run Bulletproofs baseline
+cd build
+make -j4
+
+### Running the Evaluations
+```bash
+# Evaluate Rarus
+./main
+
+# Evaluate Bulletproofs
 ./run_bulletproof
 
-# Run Plookup baseline
+# Evaluate Plookup
 ./run_plookup
-```
 
 ---
 
