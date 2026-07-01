@@ -127,6 +127,7 @@ After modifying the parameters, simply rebuild the executables:
 ```bash
 cd build
 make -j4
+```
 
 ### Running the Evaluations
 ```bash
@@ -138,6 +139,7 @@ make -j4
 
 # Evaluate Plookup
 ./run_plookup
+```
 
 ---
 
